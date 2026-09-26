@@ -25,10 +25,9 @@ if ! grep -q "interface3.music.163.com.163jiasu.com" /etc/hosts; then
     echo "127.0.0.1 interface3.music.163.com.163jiasu.com" >> /etc/hosts
 fi
 
-# Railway 注入随机 PORT：把 nginx 监听的 25884 替换成 $PORT（未设置则回退 25884）
-if [ -n "$PORT" ]; then
-    sed -i "s/25884/$PORT/g" /etc/nginx/conf.d/default.conf
-fi
+# 注意：不动 nginx.conf 的 25884 监听端口
+# Railway service domain targetPort=25884，nginx 必须监听 25884 才能接到外部请求
+# Railway 注入的 PORT 环境变量只影响 ncm-api（CMD 里已用 PORT=3000 覆盖）
 
 # start the nginx daemon
 nginx
