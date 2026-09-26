@@ -1,8 +1,8 @@
 # build
 FROM node:22-alpine AS builder
 
-# install pnpm
-RUN npm install -g pnpm
+# 安装 pnpm：用 corepack（自带的 musl 兼容版），不依赖 @pnpm/exe 原生二进制
+RUN corepack enable && corepack prepare pnpm@10.28.1 --activate
 
 WORKDIR /app
 
