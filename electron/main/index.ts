@@ -32,6 +32,11 @@ if (process.env.PORTABLE_EXECUTABLE_DIR) {
   app.setPath("userData", userDataPath);
 }
 
+// 开发模式的独立身份与用户目录已在 utils/config 顶层最早设置
+if (!app.isPackaged) {
+  processLog.info("🧪 开发模式：使用独立身份 SPlayer-Dev，与已安装版本互不干扰");
+}
+
 // 主进程
 class MainProcess {
   // 窗口
@@ -97,7 +102,7 @@ class MainProcess {
       });
 
       // 设置应用程序名称
-      electronApp.setAppUserModelId("com.imsyy.splayer");
+      electronApp.setAppUserModelId("top.imsyy.SPlayer");
       // 启动主服务进程
       await initAppServer();
       // 启动窗口

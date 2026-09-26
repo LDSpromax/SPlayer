@@ -25,9 +25,13 @@ export default defineConfig(({ mode }) => {
   const getEnv = (name: keyof MainEnv): string => {
     return loadEnv(mode, process.cwd())[name];
   };
-  // 获取端口
-  const webPort: number = Number(getEnv("VITE_WEB_PORT") || 14558);
-  const servePort: number = Number(getEnv("VITE_SERVER_PORT") || 25884);
+  // 获取端口（进程环境变量优先，供 scripts/dev.ts 注入开发模式独立端口）
+  const webPort: number = Number(
+    process.env.VITE_WEB_PORT || getEnv("VITE_WEB_PORT") || 14558,
+  );
+  const servePort: number = Number(
+    process.env.VITE_SERVER_PORT || getEnv("VITE_SERVER_PORT") || 25884,
+  );
   // 返回配置
   return {
     // 主进程
@@ -92,6 +96,7 @@ export default defineConfig(({ mode }) => {
         },
       },
       server: {
+        host: true,
         port: webPort,
         // 代理
         proxy: {

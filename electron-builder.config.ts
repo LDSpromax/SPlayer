@@ -184,6 +184,8 @@ const config: Configuration = {
       entry: {
         // 注册协议
         MimeType: "x-scheme-handler/orpheus;",
+        // 与 package.json desktopName、主进程 setAppUserModelId 保持一致，确保任务栏图标正确归组
+        StartupWMClass: "top.imsyy.SPlayer",
       },
     },
     syncDesktopName: true,

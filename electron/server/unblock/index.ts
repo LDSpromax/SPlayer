@@ -5,6 +5,19 @@ import axios from "axios";
 import getKuwoSongUrl from "./kuwo";
 import getBodianSongUrl from "./bodian";
 
+// 媒体代理允许的音源域名后缀
+const MEDIA_HOST_WHITELIST = [
+  ".kuwo.cn",
+  ".kuwo.com.cn",
+  ".126.net",
+  ".126.com",
+  ".163.com",
+];
+
+// 校验域名是否在白名单内
+const isAllowedMediaHost = (host: string) =>
+  MEDIA_HOST_WHITELIST.some((suffix) => host === suffix.slice(1) || host.endsWith(suffix));
+
 /**
  * 直接获取 网易云云盘 链接
  * Thank @939163156
@@ -85,6 +98,53 @@ export const initUnblockAPI = async (fastify: FastifyInstance) => {
     ) => {
       const result = await getBodianSongUrl(buildMatchInfo(req.query));
       return reply.send(result);
+    },
+  );
+  // 媒体代理：浏览器端解锁音源无 CORS 头，经本地同源代理播放
+  fastify.get(
+    "/unblock/mediaproxy",
+    async (
+      req: FastifyRequest<{ Querystring: { [key: string]: string } }>,
+      reply: FastifyReply,
+    ) => {
+      const target = req.query.u;
+      let parsed: URL;
+      try {
+        parsed = new URL(target);
+      } catch {
+        return reply.code(400).send({ code: 400, msg: "无效地址" });
+      }
+      // 协议与域名白名单校验
+      if (
+        !["http:", "https:"].includes(parsed.protocol) ||
+        !isAllowedMediaHost(parsed.hostname)
+      ) {
+        return reply.code(403).send({ code: 403, msg: "域名未授权" });
+      }
+      try {
+        const upstream = await axios({
+          method: "GET",
+          url: parsed.toString(),
+          responseType: "stream",
+          validateStatus: () => true,
+          headers: {
+            // 透传 Range 以支持拖动
+            ...(req.headers.range ? { Range: req.headers.range } : {}),
+            "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
+          },
+        });
+        reply.code(upstream.status || 502);
+        reply.header("accept-ranges", "bytes");
+        // 仅回传播放所需响应头
+        ["content-type", "content-length", "content-range"].forEach((h) => {
+          const v = upstream.headers[h];
+          if (v) reply.header(h, v as string);
+        });
+        return reply.send(upstream.data);
+      } catch (error) {
+        serverLog.error("❌ MediaProxy Error:", error);
+        return reply.code(502).send({ code: 502, msg: "代理失败" });
+      }
     },
   );
   serverLog.info("🌐 Register UnblockAPI successfully");

@@ -348,9 +348,11 @@ const noop = () => {};
 
 const handleMediaProxy = async (req, res) => {
   const url = req.url || "";
-  const { url: targetUrl } = parseQuery(url);
+  const query = parseQuery(url);
+  // 兼容两种参数名：u（前端 SongManager.ts 用）和 url（旧版兼容）
+  const targetUrl = query.u || query.url;
   if (!targetUrl) {
-    sendJson(res, 400, { error: "Missing 'url' parameter" });
+    sendJson(res, 400, { error: "Missing 'u' or 'url' parameter" });
     return;
   }
 

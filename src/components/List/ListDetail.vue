@@ -567,11 +567,20 @@ const handleTabChange = (value: "songs" | "comments") => {
           top: 42px;
         }
         .menu {
+          // 窄屏强制操作按钮单行排列，避免换行后与上方信息重叠
+          .left {
+            flex-wrap: nowrap;
+            gap: 6px !important;
+          }
           :deep(.n-button) {
             height: 34px;
+            min-width: auto;
             --n-font-size: 13px;
-            --n-padding: 0 14px;
+            --n-padding: 0 8px;
             --n-icon-size: 16px;
+          }
+          .more {
+            width: 34px;
           }
         }
       }

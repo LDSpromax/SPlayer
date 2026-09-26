@@ -24,7 +24,7 @@ const dataStore = useDataStore();
 // 问候语
 const greetings = computed(() => {
   const greeting = getGreeting();
-  const name = isLogin() ? dataStore.userData.name : "";
+  const name = isLogin() ? dataStore.userData.name : "吕大帅";
   return name ? `${greeting}，${name}` : greeting;
 });
 </script>

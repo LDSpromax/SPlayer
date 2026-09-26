@@ -23,7 +23,12 @@ export const initSingleLock = (): boolean => {
       } else {
         systemLog.info("🚀 第二个实例将要启动，通过 Custom Protocol");
       }
-      mainWindow.getWin()?.show();
+      // 主窗口已关闭则重建，否则直接显示，避免「关掉窗口后重新打开进不去」
+      if (!mainWindow.getWin()) {
+        mainWindow.create();
+      } else {
+        mainWindow.showWindow();
+      }
     });
   }
   return true;

@@ -33,6 +33,20 @@ class LyricWindow {
         store.set("lyric", { ...store.get("lyric"), width, height });
       }
     });
+    // 歌词窗口移动：CSS 原生拖拽时由主进程持久化坐标（Linux 仅触发 move）
+    let moveSaveTimer: NodeJS.Timeout | null = null;
+    this.win?.on("move", () => {
+      const bounds = this.win?.getBounds();
+      if (!bounds) return;
+      const { x, y } = bounds;
+      // 防抖保存，避免拖拽过程中频繁写盘
+      if (moveSaveTimer) clearTimeout(moveSaveTimer);
+      moveSaveTimer = setTimeout(() => {
+        const store = useStore();
+        store.set("lyric.x", x);
+        store.set("lyric.y", y);
+      }, 200);
+    });
     // 歌词窗口关闭
     this.win?.on("close", () => {
       this.win = null;
@@ -43,12 +57,24 @@ class LyricWindow {
     });
   }
   /**
+   * 应用「置于其他应用上层」选项
+   * setAlwaysOnTop 对 KDE/X11/macOS/Windows 生效
+   * GNOME Wayland 不支持客户端置顶，需在 XWayland 下运行（见 scripts/dev.ts）
+   * @param enabled 是否置顶
+   */
+  applyAlwaysOnTop(enabled: boolean): void {
+    if (!this.win || this.win.isDestroyed()) return;
+    this.win.setAlwaysOnTop(enabled, "screen-saver");
+  }
+  /**
    * 创建主窗口
    * @returns BrowserWindow | null
    */
   create(): BrowserWindow | null {
     const store = useStore();
     const { width, height, x, y } = store.get("lyric");
+    // 是否置于其他应用上层（可配置）
+    const alwaysOnTop = store.get("lyric.config")?.alwaysOnTop ?? true;
     this.win = createWindow({
       width: width || 800,
       height: height || 180,
@@ -64,7 +90,7 @@ class LyricWindow {
       transparent: true,
       hasShadow: false,
       backgroundColor: "rgba(0, 0, 0, 0)",
-      alwaysOnTop: true,
+      alwaysOnTop,
       resizable: true,
       movable: true,
       show: false,
@@ -88,6 +114,8 @@ class LyricWindow {
     this.win.loadURL(url.toString());
     // 窗口事件
     this.event();
+    // 应用软置顶（含 GNOME Wayland 兜底）
+    this.applyAlwaysOnTop(alwaysOnTop);
     return this.win;
   }
   /**

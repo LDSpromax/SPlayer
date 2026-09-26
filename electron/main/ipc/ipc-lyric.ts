@@ -121,7 +121,9 @@ const initLyricIpc = (): void => {
         lyricWin.showInactive();
       }
       if (isWinAlive(lyricWin)) {
-        lyricWin.setAlwaysOnTop(true, "screen-saver");
+        // 是否置于其他应用上层（读取配置，含 GNOME Wayland 软置顶兜底）
+        const alwaysOnTop = store.get("lyric.config")?.alwaysOnTop ?? true;
+        lyricWindow.applyAlwaysOnTop(alwaysOnTop);
       }
     } else {
       if (!isWinAlive(lyricWin)) return;
@@ -150,6 +152,10 @@ const initLyricIpc = (): void => {
       newOption = { ...prevOption, ...option };
     }
     store.set("lyric.config", newOption);
+    // 应用「置于其他应用上层」选项（含 GNOME Wayland 软置顶兜底）
+    if (typeof option.alwaysOnTop === "boolean" && isWinAlive(lyricWin)) {
+      lyricWindow.applyAlwaysOnTop(option.alwaysOnTop);
+    }
     // 触发窗口更新
     if (callback && isWinAlive(lyricWin)) {
       lyricWin.webContents.send("desktop-lyric:update-option", newOption);

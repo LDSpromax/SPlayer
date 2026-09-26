@@ -26,6 +26,10 @@ export enum SongUnlockServer {
   KUWO = "kuwo",
 }
 
+// Web 端音源无 CORS 头，解锁地址经本地同源代理播放；Electron 直连
+const toPlayableUrl = (url: string): string =>
+  isElectron ? url : `/api/unblock/mediaproxy?u=${encodeURIComponent(url)}`;
+
 /** 歌曲播放地址信息 */
 export type AudioSource = {
   /** 歌曲id */
@@ -40,23 +44,6 @@ export type AudioSource = {
   quality?: QualityType;
   /** 音源 */
   source?: AudioSourceType;
-};
-
-/**
- * 网页端把第三方音源直链包装为同源代理地址
- * 解决：第三方 CDN 不返回 CORS 头，AudioElementPlayer 又强制 crossOrigin="anonymous"
- *      （为了支持频谱/均衡器），导致浏览器拒绝加载跨域无 CORS 头资源
- * Electron 端直连，行为不变
- */
-const wrapUrlForWeb = (url: string | undefined): string | undefined => {
-  if (!url) return url;
-  // 已经是同源代理地址，避免重复包装
-  if (url.includes("/api/unblock/mediaproxy")) return url;
-  // Electron 端直连
-  if (isElectron) return url;
-  // blob: / file: 等本地协议不代理
-  if (/^(blob|file|data):/.test(url)) return url;
-  return `/api/unblock/mediaproxy?url=${encodeURIComponent(url)}`;
 };
 
 /**
@@ -342,7 +329,7 @@ class SongManager {
     for (const r of results) {
       if (r.status === "fulfilled" && r.value.success) {
         const unlockUrl = r.value?.result?.url;
-        // 解锁成功后，触发下载（用原始 URL，缓存的是真实直链）
+        // 解锁成功后，触发下载
         this.triggerCacheDownload(songId, unlockUrl);
         // 推断音质
         let quality = QualityType.HQ;
@@ -352,8 +339,7 @@ class SongManager {
         console.log(`最终音质判断：详细输出：`, { unlockUrl, quality });
         return {
           id: songId,
-          // 网页端包装为同源代理地址（解决 crossOrigin=CORS 死结）
-          url: wrapUrlForWeb(unlockUrl),
+          url: toPlayableUrl(unlockUrl),
           isUnlocked: true,
           quality,
           source: r.value.server,
@@ -446,7 +432,7 @@ class SongManager {
       // 在线歌曲：优先官方，其次解灰
       const songId = nextSong.type === "radio" ? nextSong.dj?.id : nextSong.id;
       if (!songId) return;
-      // 是否可解锁（网页端通过 Vite 代理同样可调解锁接口，无需 electron）
+      // 是否可解锁（网页端同样走 /api/unblock，不再限定 electron）
       const canUnlock = nextSong.type !== "radio" && settingStore.useSongUnlock;
       // 先请求官方地址
       const { url: officialUrl, isTrial, quality } = await this.getOnlineUrl(songId, false);
@@ -547,7 +533,7 @@ class SongManager {
 
     // 在线获取
     try {
-      // 是否可解锁（网页端通过 Vite 代理同样可调解锁接口，无需 electron）
+      // 是否可解锁（网页端同样走 /api/unblock，不再限定 electron）
       const canUnlock = song.type !== "radio" && settingStore.useSongUnlock;
 
       // 如果指定了非官方源，直接走解锁流程

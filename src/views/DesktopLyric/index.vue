@@ -242,8 +242,12 @@ const { start: startHoverTimer } = useTimeoutFn(
 
 /**
  * 处理鼠标移动，更新 hover 状态
+ * @param event 鼠标事件
  */
-const handleMouseMove = () => {
+const handleMouseMove = (event?: MouseEvent) => {
+  // 忽略指针实际未移动的合成事件：悬停层显隐切换会改变命中元素，
+  // Chromium 因此补发零位移 mousemove，不忽略会导致 hover 闪烁死循环
+  if (event && event.movementX === 0 && event.movementY === 0) return;
   // 设置 hover 状态（锁定和非锁定状态都响应）
   isHovered.value = true;
   startHoverTimer();
@@ -815,6 +819,7 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 .desktop-lyric {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -825,6 +830,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   transition: background-color 0.3s;
   cursor: default;
+  // 使用 CSS 原生拖拽，Linux 下 JS pointerdown 拖拽在透明置顶窗口上失效
+  -webkit-app-region: drag;
   .header {
     position: relative;
     margin-bottom: 12px;
@@ -861,6 +868,8 @@ onBeforeUnmount(() => {
         background-color 0.3s,
         transform 0.3s;
       cursor: pointer;
+      // 按钮区域禁止原生拖拽，保证点击可用
+      -webkit-app-region: no-drag;
       .n-icon {
         font-size: 24px;
       }
@@ -1084,6 +1093,8 @@ onBeforeUnmount(() => {
   }
   &.locked {
     cursor: default;
+    // 锁定态禁止原生拖拽
+    -webkit-app-region: no-drag;
     .song-name,
     .menu-btn,
     .lyric-container {

@@ -27,6 +27,8 @@ export interface LyricData {
 export interface LyricConfig {
   /** 是否锁定歌词 */
   isLock: boolean;
+  /** 是否置于其他应用上层显示 */
+  alwaysOnTop: boolean;
   /** 已播放颜色 */
   playedColor: string;
   /** 未播放颜色 */

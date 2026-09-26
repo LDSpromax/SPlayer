@@ -439,8 +439,6 @@ const showCreatorTip = () => window.$message.info("暂不支持查看主播主�
   bottom: -90px;
   height: 80px;
   padding: 0 15px;
-  // 适配刘海屏底部 home indicator
-  padding-bottom: env(safe-area-inset-bottom, 0);
   width: 100%;
   background-color: var(--surface-container-hex);
   display: grid;
@@ -697,33 +695,6 @@ const showCreatorTip = () => window.$message.info("暂不支持查看主播主�
     .play-control {
       margin: 0 0 0 12px;
       .play-icon {
-        display: none;
-      }
-    }
-    // 移动端触摸目标优化：扩大 like/more 图标的可点击区域
-    .play-data .info .data {
-      .like,
-      .more {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 36px;
-        min-height: 36px;
-        margin-left: 4px;
-        &::before {
-          content: "";
-          position: absolute;
-          inset: -8px;
-        }
-      }
-    }
-  }
-  // 超小屏（< 380px）：隐藏 like/more，避免歌曲名被挤压
-  @media (max-width: 380px) {
-    .play-data .info .data {
-      .like,
-      .more {
         display: none;
       }
     }

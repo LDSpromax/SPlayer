@@ -2,6 +2,7 @@ import type { LyricConfig } from "../../types/desktop-lyric";
 
 const config: LyricConfig = {
   isLock: false,
+  alwaysOnTop: true,
   playedColor: "#fe7971",
   unplayedColor: "#ccc",
   shadowColor: "rgba(0, 0, 0, 0.5)",

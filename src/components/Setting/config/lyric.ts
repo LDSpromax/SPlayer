@@ -633,6 +633,19 @@ export const useLyricSettings = (): SettingConfig => {
             }),
           },
           {
+            key: "desktopLyricAlwaysOnTop",
+            label: "置于其他应用上层",
+            type: "switch",
+            description: "开启后桌面歌词始终显示在其他应用之上；关闭后可被其他窗口遮挡",
+            value: computed({
+              get: () => desktopLyricConfig.alwaysOnTop,
+              set: (v) => {
+                desktopLyricConfig.alwaysOnTop = v;
+                saveDesktopLyricConfig();
+              },
+            }),
+          },
+          {
             key: "desktopLyricDoubleLine",
             label: "双行歌词",
             type: "switch",

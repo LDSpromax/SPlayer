@@ -186,10 +186,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  // 适配刘海屏四边安全区域（仅在 viewport-fit=cover 时生效）
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .background-container {
@@ -248,10 +244,6 @@ onMounted(() => {
   &.show-player {
     #main-content {
       bottom: 80px;
-      // 适配刘海屏底部 home indicator，避免播放栏遮挡内容
-      @media (max-width: 810px) {
-        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-      }
     }
   }
   &.show-full-player {

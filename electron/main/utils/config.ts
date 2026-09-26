@@ -1,5 +1,13 @@
 import { is } from "@electron-toolkit/utils";
 import { app } from "electron";
+import { join } from "path";
+
+// 开发模式使用独立身份与用户目录，避免与已安装版本抢占单实例锁
+// 必须在任何 app.getPath 调用前执行（本模块被 logger、server 最先导入）
+if (!app.isPackaged) {
+  app.setName("SPlayer-Dev");
+  app.setPath("userData", join(app.getPath("appData"), "SPlayer-Dev"));
+}
 
 /**
  * 是否为开发环境
