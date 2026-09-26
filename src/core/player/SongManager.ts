@@ -43,6 +43,23 @@ export type AudioSource = {
 };
 
 /**
+ * 网页端把第三方音源直链包装为同源代理地址
+ * 解决：第三方 CDN 不返回 CORS 头，AudioElementPlayer 又强制 crossOrigin="anonymous"
+ *      （为了支持频谱/均衡器），导致浏览器拒绝加载跨域无 CORS 头资源
+ * Electron 端直连，行为不变
+ */
+const wrapUrlForWeb = (url: string | undefined): string | undefined => {
+  if (!url) return url;
+  // 已经是同源代理地址，避免重复包装
+  if (url.includes("/api/unblock/mediaproxy")) return url;
+  // Electron 端直连
+  if (isElectron) return url;
+  // blob: / file: 等本地协议不代理
+  if (/^(blob|file|data):/.test(url)) return url;
+  return `/api/unblock/mediaproxy?url=${encodeURIComponent(url)}`;
+};
+
+/**
  * 歌曲管理器
  * 负责歌曲的获取、缓存、预加载等操作
  */
@@ -325,7 +342,7 @@ class SongManager {
     for (const r of results) {
       if (r.status === "fulfilled" && r.value.success) {
         const unlockUrl = r.value?.result?.url;
-        // 解锁成功后，触发下载
+        // 解锁成功后，触发下载（用原始 URL，缓存的是真实直链）
         this.triggerCacheDownload(songId, unlockUrl);
         // 推断音质
         let quality = QualityType.HQ;
@@ -335,7 +352,8 @@ class SongManager {
         console.log(`最终音质判断：详细输出：`, { unlockUrl, quality });
         return {
           id: songId,
-          url: unlockUrl,
+          // 网页端包装为同源代理地址（解决 crossOrigin=CORS 死结）
+          url: wrapUrlForWeb(unlockUrl),
           isUnlocked: true,
           quality,
           source: r.value.server,
