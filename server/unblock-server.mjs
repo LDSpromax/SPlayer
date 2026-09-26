@@ -506,8 +506,8 @@ const server = createServer(async (req, res) => {
       sendJson(res, 200, result);
       return;
     }
-    // 健康检查
-    if (url === "/" || url === "/unblock") {
+    // 健康检查（兼容 /、/unblock、/unblock/）
+    if (url === "/" || url === "/unblock" || url === "/unblock/") {
       sendJson(res, 200, {
         name: "SPlayer UnblockAPI (web)",
         description: "Standalone unblock service for web deployment",
