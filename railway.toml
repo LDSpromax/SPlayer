@@ -1,0 +1,13 @@
+# Railway 部署配置
+# 文档：https://docs.railway.com/deploy/config-as-code
+
+[deploy]
+# 启动健康检查（Railway 会探测这个路径判断容器是否就绪）
+healthcheckPath = "/"
+healthcheckTimeout = 30
+# 健康检查类型：因为 nginx 监听 25884 端口，根路径返回 index.html
+# Railway 会自动从 PORT 环境变量或暴露的端口推断
+
+# 重启策略
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
