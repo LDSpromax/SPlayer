@@ -34,7 +34,7 @@ COPY --from=builder /app/server/unblock-server.mjs /app/server/unblock-server.mj
 COPY --from=builder /app/electron/server/unblock/kwDES.js /app/electron/server/unblock/kwDES.js
 
 RUN apk add --no-cache npm python3 \
-    && npm install -g @unblockneteasemusic/server @neteasecloudmusicapienhanced/api \
+    && npm install -g @neteasecloudmusicapienhanced/api \
     && sed -i 's/\r$//' /docker-entrypoint.sh \
     && chmod +x /docker-entrypoint.sh
 
